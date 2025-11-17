@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const dilemasRoutes = require('./routes/dilemasRoutes');
+const responsesRoutes = require('./routes/responsesRoutes');
+const reportsRoutes = require('./routes/reportsRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -14,6 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', authRoutes);
 app.use('/api', dilemasRoutes);
+app.use('/api', responsesRoutes);
+app.use('/api', reportsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ 

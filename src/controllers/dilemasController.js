@@ -86,6 +86,15 @@ const getDilemaById = async (req, res) => {
         usuarioRespondio = respuestaUsuario.rows[0].opcion_elegida;
       }
     }
+
+    let usuarioDenuncio = false;
+    if (req.user) {
+      const denunciaUsuario = await query(
+        'SELECT id FROM denuncias WHERE dilema_id = $1 AND usuario_id = $2',
+        [id, req.user.id]
+    );
+    usuarioDenuncio = denunciaUsuario.rows.length > 0;
+    }
     
     res.json({
       success: true,
@@ -98,7 +107,8 @@ const getDilemaById = async (req, res) => {
           votos_a: parseInt(stats.votos_a),
           votos_b: parseInt(stats.votos_b)
         },
-        usuario_respondio: usuarioRespondio
+        usuario_respondio: usuarioRespondio,
+        usuario_denuncio: usuarioDenuncio
       }
     });
     
