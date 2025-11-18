@@ -1,0 +1,68 @@
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:13-alpine
+    container_name: moralvotes_db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}      
+      POSTGRES_USER: ${DB_USER}        
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - moralvotes_network
+
+  api:
+    build: .
+    container_name: moralvotes_api
+    environment:
+      DB_HOST: ${DB_HOST}              
+      DB_DATABASE: ${DB_DATABASE}      
+      DB_USER: ${DB_USER}              
+      DB_PASSWORD: ${DB_PASSWORD}      
+      DB_PORT: ${DB_PORT}              
+      JWT_SECRET: ${JWT_SECRET}        
+      PORT: ${PORT}                    
+      NODE_ENV: ${NODE_ENV}            
+      LIMITE_DENUNCIAS: ${LIMITE_DENUNCIAS} 
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - moralvotes_network
+
+  adminer:
+    image: adminer:4.8.1
+    container_name: moralvotes_adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    networks:
+      - moralvotes_network
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: moralvotes_ngrok
+    command: http moralvotes_api:3000
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_TOKEN}  
+    ports:
+      - "4040:4040"
+    depends_on:
+      - api
+    networks:
+      - moralvotes_network
+
+volumes:
+  postgres_data:
+
+networks:
+  moralvotes_network:
+    driver: bridge
