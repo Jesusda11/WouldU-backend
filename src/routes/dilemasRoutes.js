@@ -6,7 +6,9 @@ const {
   getDilemaById,
   createDilema,
   updateDilema,
-  deleteDilema
+  deleteDilema,
+  getDilemasNoRespondidos,
+  getDilemasByUser
 } = require('../controllers/dilemasController');
 
 router.get('/dilemas', getAllDilemas);
@@ -15,5 +17,7 @@ router.get('/dilemas/:id', getDilemaById);
 router.post('/dilemas', authMiddleware, createDilema);
 router.put('/dilemas/:id', authMiddleware, updateDilema);
 router.delete('/dilemas/:id', authMiddleware, deleteDilema);
+router.get('/dilemas/:id/unanswered', authMiddleware, getDilemasNoRespondidos)
+router.get('/dilemas/user/:id', getDilemasByUser)
 
 module.exports = router;

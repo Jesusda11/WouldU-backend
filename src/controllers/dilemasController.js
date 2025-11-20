@@ -277,10 +277,102 @@ const deleteDilema = async (req, res) => {
   }
 };
 
+const getDilemasNoRespondidos = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const sql = `
+      SELECT d.*, u.nombre AS creador_nombre
+      FROM dilemas d
+      LEFT JOIN usuarios u ON d.creado_por = u.id
+      WHERE d.activo = true
+        AND d.id NOT IN (
+          SELECT dilema_id FROM respuestas WHERE usuario_id = $1
+        )
+      ORDER BY d.created_at DESC
+      LIMIT 5
+    `;
+
+    const result = await query(sql, [userId]);
+
+    res.json({
+      success: true,
+      data: result.rows
+    });
+
+  } catch (error) {
+    console.error("Error al obtener dilemas no respondidos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener dilemas no respondidos",
+      error: error.message
+    });
+  }
+};
+
+const getDilemasByUser = async (req, res) => {
+  try {
+    const { id } = req.params; 
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "El parámetro de usuario (ID) es requerido en la URL.",
+      });
+    }
+
+    const userResult = await query('SELECT id, nombre FROM usuarios WHERE id = $1', [id]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `El usuario con ID ${id} no existe.`,
+      });
+    }
+    
+    const sql = `
+      SELECT d.*, u.nombre AS creador_nombre
+      FROM dilemas d
+      LEFT JOIN usuarios u ON d.creado_por = u.id
+      WHERE d.activo = true
+      AND d.creado_por = $1
+      ORDER BY d.created_at DESC
+    `;
+
+    const result = await query(sql, [id]);
+    const dilemas = result.rows;
+
+    if (dilemas.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: `El usuario con ID ${id} aún no ha creado dilemas activos.`,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Dilemas activos encontrados para el usuario ${id}.`,
+      data: dilemas,
+    });
+
+  } catch (error) {
+    console.error("Error al obtener los dilemas del usuario:", error);
+    res.status(500).json({
+      success: false,
+      message: "Ocurrió un error interno al procesar la solicitud.",
+      error: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   getAllDilemas,
   getDilemaById,
   createDilema,
   updateDilema,
-  deleteDilema
+  deleteDilema,
+  getDilemasNoRespondidos,
+  getDilemasByUser
 };
